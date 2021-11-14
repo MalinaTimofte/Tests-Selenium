@@ -1,0 +1,104 @@
+const { Builder, By, Key, Browser } = require("selenium-webdriver");
+var should = require("chai").should();
+
+// describe block
+describe("Sign up tests", function () {
+  it("Sign up successfully an page redirected to https://politrip.com/account/sign-up/type-select", async function () {
+    let driver = await new Builder().forBrowser("firefox").build();
+
+    //navigate to our application
+    await driver.get("https://politrip.com/account/sign-up");
+    // complete all required fields
+    await driver.findElement(By.name("first-name")).sendKeys("Malina");
+    await driver.findElement(By.name("last-name")).sendKeys("Timofte");
+    await driver.findElement(By.name("email")).sendKeys("malina@yahoo.com");
+    await driver.findElement(By.name("password")).sendKeys("Primavara123");
+    await driver.findElement(By.name("heard")).sendKeys("Other");
+    await driver
+      .findElement(By.id("sign-up-confirm-password-input"))
+      .sendKeys("Primavara123", Key.RETURN);
+
+    // check if the url page is the desired one after succesfully signed up
+    await driver
+      .getCurrentUrl()
+      .should.equal("https://politrip.com/account/sign-up/type-select");
+
+    await driver.quit();
+  });
+
+  it("User already exists", async function () {
+    let driver = await new Builder().forBrowser("firefox").build();
+
+    //navigate to our application
+    await driver.get("https://politrip.com/account/sign-up");
+    // complete all required fields
+    await driver.findElement(By.name("first-name")).sendKeys("Timofte");
+    await driver.findElement(By.name("last-name")).sendKeys("Malina");
+    await driver.findElement(By.name("email")).sendKeys("malina@yahoo.com");
+    await driver.findElement(By.name("password")).sendKeys("Primavara123");
+    await driver.findElement(By.name("heard")).sendKeys("Other");
+    await driver
+      .findElement(By.id("sign-up-confirm-password-input"))
+      .sendKeys("Primavara123", Key.RETURN);
+
+    let alreadyExistsText = await driver
+      .findElement(By.className("response response-error error-container"))
+      .getText()
+      .then(function (value) {
+        return value;
+      });
+    alreadyExistsText.should.equal(
+      "An user with this email is already registered"
+    );
+
+    await driver.quit();
+  });
+  it("Password hint", async function () {
+    let driver = await new Builder().forBrowser("firefox").build();
+
+    //navigate to our application
+    await driver.get("https://politrip.com/account/sign-up");
+    // complete all required fields
+    await driver
+      .findElement(By.name("password"))
+      .sendKeys("Parola", Key.RETURN);
+
+    let passwordHint = await driver
+      .findElement(By.className("ng-invalid ng-dirty ng-touched"))
+      .getText()
+      .then(function (value) {
+        return value;
+      });
+    passwordHint.should.equal(
+      "Password must contain at least 8 characters, 1 uppercase letter, 1 lowercase letter and 1 digit"
+    );
+
+    driver.quit();
+  });
+
+  it("Password must match", async function () {
+    let driver = await new Builder().forBrowser("firefox").build();
+
+    //navigate to our application
+    await driver.get("https://politrip.com/account/sign-up");
+    // complete all required fields
+    await driver.findElement(By.name("password")).sendKeys("Parola1234");
+    await driver
+      .findElement(By.id("sign-up-confirm-password-input"))
+      .sendKeys("Parola123", Key.RETURN);
+
+    let PasswordMatch = await driver
+      .findElement(
+        By.xpath(
+          "/html/body/app-root/app-access-account/app-page-template/div/app-sign-up/app-sign-in-container/div/div[2]/div/div[2]/div/form/div[5]/app-form-control-error-message/em/span"
+        )
+      )
+      .getText()
+      .then(function (value) {
+        return value;
+      });
+    PasswordMatch.should.equal("Passwords must match");
+
+    driver.quit();
+  });
+});
